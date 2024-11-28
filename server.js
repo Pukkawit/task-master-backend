@@ -34,6 +34,7 @@ dotenv.config();
 // Use the PORT environment variable or default to 3000 for local development
 const PORT = process.env.PORT || 3000;
 
+// Start the server
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
@@ -50,6 +51,57 @@ const pool = new Pool({
 module.exports = pool; // Export the pool for use in your app
 
 app.use(express.json());
+
+// Initialize the database
+const initializeDatabase = async () => {
+  try {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS users (
+        id SERIAL PRIMARY KEY,
+        username VARCHAR(255) NOT NULL,
+        email VARCHAR(255) NOT NULL UNIQUE,
+        password VARCHAR(255) NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS tasks (
+        id SERIAL PRIMARY KEY,
+        user_id INT REFERENCES users(id),
+        title VARCHAR(255) NOT NULL,
+        description TEXT,
+        status VARCHAR(50),
+        priority VARCHAR(50),
+        deadline TIMESTAMP,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
+    console.log("Database tables initialized successfully.");
+  } catch (error) {
+    console.error("Error initializing database:", error);
+  }
+};
+
+// Call the database initialization function
+initializeDatabase();
+
+// Routes
+app.get("/", (req, res) => {
+  res.send("Welcome to the Task Manager API!");
+});
+
+// Route for testing database connection
+app.get("/test-db", async (req, res) => {
+  try {
+    const result = await pool.query("SELECT NOW() AS current_time");
+    res.status(200).json(result.rows[0]);
+  } catch (error) {
+    console.error("Database test error:", error);
+    res.status(500).send("Database connection failed.");
+  }
+});
 
 app.get("/", async (req, res) => {
   try {
