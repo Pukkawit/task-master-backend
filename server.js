@@ -16,6 +16,7 @@ app.use(
     credentials: true, // Allow cookies or Authorization headers
   })
 );
+app.options("*", cors());
 
 app.use(express.json()); // Parse JSON payloads
 app.use(express.urlencoded({ extended: true })); // Parse URL-encoded payloads
