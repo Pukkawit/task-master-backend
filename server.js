@@ -10,7 +10,7 @@ const app = express();
 // Enable CORS for cross-origin requests
 app.use(
   cors({
-    origin: "http://127.0.0.1:5500", // Allow requests from your frontend
+    origin: "https://task-master-frontend-two.vercel.app/", // Allow requests from your frontend
     allowedHeaders: ["Authorization", "Content-Type"], // Allow these headers
     methods: ["GET", "POST", "PUT", "DELETE"], // Allow these methods
   })
@@ -20,7 +20,10 @@ app.use(express.json()); // Parse JSON payloads
 app.use(express.urlencoded({ extended: true })); // Parse URL-encoded payloads
 app.options("*", cors()); // Allow all preflight requests
 app.use((req, res, next) => {
-  res.header("Access-Control-Allow-Origin", "http://127.0.0.1:5500");
+  res.header(
+    "Access-Control-Allow-Origin",
+    "https://task-master-frontend-two.vercel.app/"
+  );
   res.header("Access-Control-Allow-Headers", "Authorization, Content-Type");
   res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE");
   next();
@@ -28,16 +31,24 @@ app.use((req, res, next) => {
 
 dotenv.config();
 
+// Use the PORT environment variable or default to 3000 for local development
 const PORT = process.env.PORT || 3000;
 
-// PostgreSQL connection pool
-const pool = new Pool({
-  host: process.env.DB_HOST,
-  port: process.env.DB_PORT,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME,
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
 });
+
+// Connection On Render
+const { Pool } = require("pg");
+
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL, // Fetch from environment variables
+  ssl: {
+    rejectUnauthorized: false, // Required for Render-managed databases
+  },
+});
+
+module.exports = pool; // Export the pool for use in your app
 
 app.use(express.json());
 
@@ -53,10 +64,6 @@ app.get("/", async (req, res) => {
   }
 });
 
-app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
-});
-
 // Create New User
 app.post("/register", async (req, res) => {
   const { username, email, password } = req.body;
@@ -65,7 +72,7 @@ app.post("/register", async (req, res) => {
   console.log("Request body:", req.body);
 
   if (!username || !email || !password || typeof password !== "string") {
-    return res.status(400).json({
+    return res.status(400).send("All fields are required").json({
       message: "Invalid input. Ensure all fields are filled correctly.",
     });
   }
@@ -73,6 +80,7 @@ app.post("/register", async (req, res) => {
   try {
     // Hash the password
     const saltRounds = 10;
+
     const hashedPassword = await bcrypt.hash(password, saltRounds);
     console.log("Password before hashing:", password); // Should log the correct value
 
@@ -82,21 +90,15 @@ app.post("/register", async (req, res) => {
       [username, email, hashedPassword]
     );
 
-    res.status(201).json({
-      message: `User registered successfully with ID: ${result.rows[0].id}`,
-    });
+    res.status(201).send(`User registered with ID: ${result.rows[0].id}`);
   } catch (err) {
     console.error(err);
     if (err.code === "23505") {
       // Unique constraint violation
-      return res.status(409).json({
-        message: "Username or email already exists",
-      });
+      res.status(409).send("Username or email already exists");
     } else {
-      console.error("Error registering user:", err);
-      return res.status(500).json({
-        message: "Internal server error",
-      });
+      console.error("Error registering user:", error);
+      res.status(500).send("Internal server error");
     }
   }
 });
