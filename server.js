@@ -39,7 +39,6 @@ app.listen(PORT, () => {
 });
 
 // Connection On Render
-const { Pool } = require("pg");
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL, // Fetch from environment variables
