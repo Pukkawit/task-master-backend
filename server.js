@@ -10,9 +10,10 @@ const app = express();
 // Enable CORS for cross-origin requests
 app.use(
   cors({
-    origin: "https://task-master-frontend-two.vercel.app/", // Allow requests from your frontend
+    origin: "https://task-master-frontend-two.vercel.app", // Allow requests from frontend
     allowedHeaders: ["Authorization", "Content-Type"], // Allow these headers
     methods: ["GET", "POST", "PUT", "DELETE"], // Allow these methods
+    credentials: true, // Allow cookies or Authorization headers
   })
 );
 
@@ -22,7 +23,7 @@ app.options("*", cors()); // Allow all preflight requests
 app.use((req, res, next) => {
   res.header(
     "Access-Control-Allow-Origin",
-    "https://task-master-frontend-two.vercel.app/"
+    "https://task-master-frontend-two.vercel.app"
   );
   res.header("Access-Control-Allow-Headers", "Authorization, Content-Type");
   res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE");
