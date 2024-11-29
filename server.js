@@ -129,7 +129,8 @@ app.post("/register", async (req, res) => {
   console.log("Request body:", req.body);
 
   if (!username || !email || !password || typeof password !== "string") {
-    return res.status(400).send("All fields are required").json({
+    // Return a JSON response for validation errors
+    return res.status(400).json({
       message: "Invalid input. Ensure all fields are filled correctly.",
     });
   }
@@ -137,9 +138,8 @@ app.post("/register", async (req, res) => {
   try {
     // Hash the password
     const saltRounds = 10;
-
     const hashedPassword = await bcrypt.hash(password, saltRounds);
-    console.log("Password before hashing:", password); // Should log the correct value
+    console.log("Password before hashing:", password);
 
     // Insert the user into the database
     const result = await pool.query(
@@ -147,15 +147,20 @@ app.post("/register", async (req, res) => {
       [username, email, hashedPassword]
     );
 
-    res.status(201).send(`User registered with ID: ${result.rows[0].id}`);
+    // Return a JSON response on successful registration
+    res
+      .status(201)
+      .json({ message: `User registered with ID: ${result.rows[0].id}` });
   } catch (err) {
-    console.error(err);
+    console.error("Error during registration:", err);
     if (err.code === "23505") {
       // Unique constraint violation
-      res.status(409).send("Username or email already exists");
+      return res
+        .status(409)
+        .json({ message: "Username or email already exists" });
     } else {
-      console.error("Error registering user:", error);
-      res.status(500).send("Internal server error");
+      // Default error response for unexpected errors
+      return res.status(500).json({ message: "Internal server error" });
     }
   }
 });
