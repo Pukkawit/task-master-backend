@@ -28,7 +28,7 @@ app.options("*", cors()); // Allow all preflight requests
 app.use((req, res, next) => {
   res.header(
     "Access-Control-Allow-Origin",
-    "https://task-master-frontend-two.vercel.app"
+    "https://taskmaster-pukkawits-projects.vercel.app"
   );
   res.header("Access-Control-Allow-Headers", "Authorization, Content-Type");
   res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE");
