@@ -8,9 +8,13 @@ const cors = require("cors");
 const app = express();
 
 // Enable CORS for cross-origin requests
+const allowedOrigins = [
+  "https://taskmaster-pukkawits-projects.vercel.app",
+  "https://taskmaster-git-main-pukkawits-projects.vercel.app",
+];
 app.use(
   cors({
-    origin: "https://task-master-frontend-two.vercel.app", // Allow requests from frontend
+    origin: allowedOrigins, // Allow requests from frontend
     allowedHeaders: ["Authorization", "Content-Type"], // Allow these headers
     methods: ["GET", "POST", "PUT", "DELETE"], // Allow these methods
     credentials: true, // Allow cookies or Authorization headers
